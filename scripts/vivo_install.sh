@@ -55,13 +55,18 @@ function build_mn_from_source() {
                 # print ascii banner if a logo exists
                 echo -e "Starting the compilation process for ${CODENAME}, stay tuned"
                 # compilation starts here
-                   cd ..
-               ./autogen.sh
-			  ./configure LDFLAGS="-L/home/${CODENAME}/${GIT_PROJECT}/db4/lib/" CPPFLAGS="-I/home/${CODENAME}/${GIT_PROJECT}/db4/include/"
-               make
-               
-			   make install
-			   
+                  cd /home/${CODENAME}/vivo
+                     ./autogen.sh
+		    ./configure LDFLAGS="-L/home/${CODENAME}/${GIT_PROJECT}/db4/lib/" CPPFLAGS="-I/home/${CODENAME}/${GIT_PROJECT}/db4/include/"
+                    make
+		    make install
+		    strip  /home/${CODENAME}/vivo/src/vivod
+		    strip  /home/${CODENAME}/vivo/src/vivo-cli
+		    chmod a+x  /home/${CODENAME}/vivo/src/vivod
+                    chmod a+x /home/${CODENAME}/vivo/src/vivo-cli
+
+		    cp  /home/${CODENAME}/vivo/src/vivod /usr/local/bin/vivod
+	            cp  /home/${CODENAME}/vivo/src/vivo-cli /usr/local/bin/vivo-cli 
         else
                 echo "daemon already in place at ${MNODE_DAEMON}, not compiling"
         fi
@@ -82,6 +87,18 @@ function create_mn_user() {
     
 }
 
+function install_sentinel() {
+  sudo apt-get update
+  sudo apt-get install -y git python-virtualenv
+  sudo apt-get install -y virtualenv
+  cd .vivocore
+  git clone https://github.com/dashpay/sentinel.git
+  cd sentinel
+  virtualenv venv
+  venv/bin/pip install -r requirements.txt
+
+
+}
 
 
 function configure_firewall() {
@@ -213,7 +230,7 @@ main() {
     create_mn_user
     build_mn_from_source 
     configure_firewall      
-         
+    install_sentinel         
 }
 
 main "$@"
