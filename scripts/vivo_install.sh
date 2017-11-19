@@ -11,9 +11,12 @@
 #
 
 # Useful variables
-DATE_STAMP="$(date +%y-%m-%d-%s)"
-# im an not very proud of this
-IPV6_INT_BASE="$(ip -6 addr show dev ${ETH_INTERFACE} | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v ^fe80 | grep -v ^::1 | cut -f1-4 -d':' | head -1)"
+MASTERNODE_HOME="/home/masternode/"
+SCRIPT_HOME="/root/masternodeInstallation/"
+CLIENT_NAME="vivo-cli"
+DAEMON_NAME="vivod"
+CRYPTO_NAME="vivo"
+
 
 function check_distro() {
 	# currently only for Ubuntu 16.04
@@ -35,38 +38,32 @@ function build_mn_from_source() {
         # daemon not found compile it
         if [ ! -f ${MNODE_DAEMON} ]; then
             #go to user home
-			cd /home/${CODENAME}
-			pwd
-			
-			git clone ${GIT_URL} 
-            cd ${GIT_PROJECT}
-            echo "Checkout desired tag: ${SCVERSION}"
-			
-			
-			# Download & Install Berkley DB
+	     cd ${MASTERNODE_HOME}
+	     git clone ${GIT_URL} 
+             cd ${CRYPTO_NAME}
+            # Download & Install Berkley DB
             # -----------------------------
-			mkdir db4
-			wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
-			tar -xzvf db-4.8.30.NC.tar.gz
-			cd db-4.8.30.NC/build_unix/
-			../dist/configure --enable-cxx --disable-shared --with-pic --prefix=/home/${CODENAME}/${GIT_PROJECT}/db4/
-			make install
+	        mkdir db4
+		wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
+		tar -xzvf db-4.8.30.NC.tar.gz
+		cd db-4.8.30.NC/build_unix/
+		../dist/configure --enable-cxx --disable-shared --with-pic --prefix=${MASTERNODE_HOME}${CRYPTO_NAME}/db4/
+		make install
 			
                 # print ascii banner if a logo exists
-                echo -e "Starting the compilation process for ${CODENAME}, stay tuned"
+                echo -e "Starting the compilation process for ${CRYPTO_NAME}}, stay tuned"
                 # compilation starts here
-                  cd /home/${CODENAME}/vivo
+                  cd ${MASTERNODE_HOME}${CRYPTO_NAME}
                      ./autogen.sh
-		    ./configure LDFLAGS="-L/home/${CODENAME}/${GIT_PROJECT}/db4/lib/" CPPFLAGS="-I/home/${CODENAME}/${GIT_PROJECT}/db4/include/"
+		    ./configure LDFLAGS="-L${MASTERNODE_HOME}${CRYPTO_NAME}/db4/lib/" CPPFLAGS="-I${MASTERNODE_HOME}${CRYPTO_NAME}/db4/include/"
                     make
 		    make install
-		    strip  /home/${CODENAME}/vivo/src/vivod
-		    strip  /home/${CODENAME}/vivo/src/vivo-cli
-		    chmod a+x  /home/${CODENAME}/vivo/src/vivod
-                    chmod a+x /home/${CODENAME}/vivo/src/vivo-cli
-
-		    cp  /home/${CODENAME}/vivo/src/vivod /usr/local/bin/vivod
-	            cp  /home/${CODENAME}/vivo/src/vivo-cli /usr/local/bin/vivo-cli 
+		    strip   ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME}
+		    strip   ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${CLIENT_NAME}
+		    chmod a+x ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME} 
+                    chmod a+x  ${MASTERNODE_HOME}/${CRYPTO_NAME}/src/${CLIENT_NAME}
+		    cp  ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${CLIENT_NAME}  /usr/local/bin/${CLIENT_NAME}
+	            cp  ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME}  /usr/local/bin/${DAEMON_NAME}
         else
                 echo "daemon already in place at ${MNODE_DAEMON}, not compiling"
         fi
@@ -74,24 +71,12 @@ function build_mn_from_source() {
 
 
 
-function create_mn_user() {
-
-    # our new mnode unpriv user acc is added 
-    if id "${CODENAME}" >/dev/null 2>&1; then
-        echo "user exists already, do nothing"
-    else
-        echo "Adding new system user ${CODENAME}"
-        adduser --gecos ""  ${CODENAME}
-        sudo adduser ${CODENAME}  sudo
-    fi
-    
-}
 
 function install_sentinel() {
   sudo apt-get update
   sudo apt-get install -y git python-virtualenv
   sudo apt-get install -y virtualenv
-  cd .vivocore
+  cd  ${MASTERNODE_HOME}/${CRYPTO_NAME}/
   git clone https://github.com/dashpay/sentinel.git
   cd sentinel
   virtualenv venv
@@ -104,14 +89,8 @@ function install_sentinel() {
 function configure_firewall() {
     echo "Configuring firewall rules"
 	# disallow everything except ssh and masternode inbound ports
-	ufw default deny
-	ufw logging on
-	ufw allow ${SSH_INBOUND_PORT}/tcp
 	# KISS, its always the same port for all interfaces
 	ufw allow ${MNODE_INBOUND_PORT}/tcp
-	# This will only allow 6 connections every 30 seconds from the same IP address.
-	ufw limit OpenSSH	
-	ufw --force enable 
 }
 
 function create_mn_configuration() {
@@ -150,7 +129,6 @@ function create_control_configuration() {
 
 function create_systemd_configuration() {
 	# create one config file per masternode
-	for NUM in $(seq 1 ${SETUP_MNODES_COUNT}); do
 	PASS=$(date | md5sum | cut -c1-24)
 		echo "writing config file ${SYSTEMD_CONF}/${GIT_PROJECT}_n${NUM}.service"
 		cat > ${SYSTEMD_CONF}/${GIT_PROJECT}_n${NUM}.service <<-EOF
@@ -178,7 +156,6 @@ function create_systemd_configuration() {
 			[Install]
 			WantedBy=multi-user.target			
 		EOF
-	done
 }
 
 function set_permissions() {
@@ -227,7 +204,6 @@ function final_call() {
 
 main() {
 
-    create_mn_user
     build_mn_from_source 
     configure_firewall      
     install_sentinel         

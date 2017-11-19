@@ -73,13 +73,27 @@ function configure_firewall() {
 }
 
 
+function create_mn_user() {
+
+    # our new mnode unpriv user acc is added
+    if id "${CODENAME}" >/dev/null 2>&1; then
+        echo "user exists already, do nothing"
+    else
+        echo "Adding new system user masternode"
+        adduser  --gecos ""  masternode
+        sudo adduser masternode  sudo
+    fi
+
+}
+
 
 
 main() {
     check_distro
+    create_mn_user
     swaphack
     install_packages
-	configure_firewall
+    configure_firewall
 }
 
 main "$@"

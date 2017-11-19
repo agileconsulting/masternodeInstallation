@@ -26,9 +26,9 @@ function source_config() {
 		echo "Script version ${SCRIPT_VERSION}, you picked: ${1}"
 		echo "apply config file for ${1}"		
 		source "${SETUP_CONF_FILE}"
-
+                source scripts/common.sh
 		echo "running installer script"		
-		source scripts/vivo_install.sh ${1}
+		source scripts/${1}_install.sh 
 	else
 		echo "required file ${SETUP_CONF_FILE} does not exist, abort!"
 		exit 1   
@@ -36,7 +36,6 @@ function source_config() {
 }
 
 SETUP_CONF_FILE="config/${1}/${1}.env"
-SETUP_MNODES_COUNT=${2}
 CRYPTOS=`ls -l config/ | egrep '^d' | awk '{print $9}'`
 
 # put in main at a later point in time

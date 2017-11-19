@@ -219,12 +219,6 @@ function final_call() {
 	tput sgr0
 }
 
-main() {
 
-    create_mn_user
-    build_mn_from_source 
-    #configure_firewall      
          
-}
 
-main "$@"
