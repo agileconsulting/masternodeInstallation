@@ -15,7 +15,7 @@ MASTERNODE_HOME="/home/masternode/"
 SCRIPT_HOME="/root/masternodeInstallation/"
 CLIENT_NAME="vivo-cli"
 DAEMON_NAME="vivod"
-CRYPTO_NAME="vivo"
+CRYPTO_NAME="synx"
 
 
 function check_distro() {
@@ -32,6 +32,12 @@ function check_distro() {
 		exit 1
 	fi
 }
+function create_dir() {
+
+	     cd ${MASTERNODE_HOME}
+
+             mkdir  ${CRYPTO_NAME}
+}
 
 
 function build_mn_from_source() {
@@ -39,10 +45,10 @@ function build_mn_from_source() {
         if [ ! -f ${MNODE_DAEMON} ]; then
             #go to user home
 	     cd ${MASTERNODE_HOME}
-	     git clone ${GIT_URL} 
              cd ${CRYPTO_NAME}
-            # Download & Install Berkley DB
+	     git clone ${GIT_URL} 
             # -----------------------------
+            # Download & Install Berkley DB
 	        mkdir db4
 		wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 		tar -xzvf db-4.8.30.NC.tar.gz
@@ -53,11 +59,10 @@ function build_mn_from_source() {
                 # print ascii banner if a logo exists
                 echo -e "Starting the compilation process for ${CRYPTO_NAME}}, stay tuned"
                 # compilation starts here
-                  cd ${MASTERNODE_HOME}${CRYPTO_NAME}
-                     ./autogen.sh
-		    ./configure LDFLAGS="-L${MASTERNODE_HOME}${CRYPTO_NAME}/db4/lib/" CPPFLAGS="-I${MASTERNODE_HOME}${CRYPTO_NAME}/db4/include/"
-                    make
-		    make install
+                  cd  ${MASTERNODE_HOME}${CRYPTO_NAME}
+                 sudo wget https://github.com/SyndicateLabs/SyndicateQT/releases/download/v1.0.0.7/SYNX_HEADLESS_UBUNTU_V1.sh
+                sudo chmod +x SYNX_HEADLESS_UBUNTU_V1.sh
+                sudo ./SYNX_HEADLESS_UBUNTU_V1.sh
 		    strip   ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME}
 		    strip   ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${CLIENT_NAME}
 		    chmod a+x ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME} 
@@ -204,9 +209,10 @@ function final_call() {
 
 main() {
 
+    create_dir
     build_mn_from_source 
-    configure_firewall      
-    install_sentinel         
+#    configure_firewall      
+#    install_sentinel         
 }
 
 main "$@"
