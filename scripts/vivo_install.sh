@@ -77,7 +77,7 @@ function install_sentinel() {
   sudo apt-get install -y git python-virtualenv
   sudo apt-get install -y virtualenv
   cd  ${MASTERNODE_HOME}/${CRYPTO_NAME}/
-  git clone https://github.com/dashpay/sentinel.git
+  git clone https://github.com/vivocoin/sentinel
   cd sentinel
   virtualenv venv
   venv/bin/pip install -r requirements.txt
