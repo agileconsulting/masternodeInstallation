@@ -35,8 +35,6 @@ function check_distro() {
 
 
 function build_mn_from_source() {
-        # daemon not found compile it
-        if [ ! -f ${MNODE_DAEMON} ]; then
             #go to user home
 	     cd ${MASTERNODE_HOME}
 	     git clone ${GIT_URL} 
@@ -53,8 +51,13 @@ function build_mn_from_source() {
                 # print ascii banner if a logo exists
                 echo -e "Starting the compilation process for ${CRYPTO_NAME}}, stay tuned"
                 # compilation starts here
-                  cd ${MASTERNODE_HOME}${CRYPTO_NAME}
-                     ./autogen.sh
+                  
+                echo -e " cd  ${MASTERNODE_HOME}${CRYPTO_NAME}"
+		cd ${MASTERNODE_HOME}${CRYPTO_NAME}
+                chmod 777 -R ${MASTERNODE_HOME}${CRYPTO_NAME}	
+		chmod 777 ./autogen.sh           
+		  ./autogen.sh
+		 chmod 777 configure
 		    ./configure LDFLAGS="-L${MASTERNODE_HOME}${CRYPTO_NAME}/db4/lib/" CPPFLAGS="-I${MASTERNODE_HOME}${CRYPTO_NAME}/db4/include/"
                     make
 		    make install
@@ -64,9 +67,6 @@ function build_mn_from_source() {
                     chmod a+x  ${MASTERNODE_HOME}/${CRYPTO_NAME}/src/${CLIENT_NAME}
 		    cp  ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${CLIENT_NAME}  /usr/local/bin/${CLIENT_NAME}
 	            cp  ${MASTERNODE_HOME}${CRYPTO_NAME}/src/${DAEMON_NAME}  /usr/local/bin/${DAEMON_NAME}
-        else
-                echo "daemon already in place at ${MNODE_DAEMON}, not compiling"
-        fi
 }
 
 
@@ -204,8 +204,8 @@ function final_call() {
 
 main() {
 
-    build_mn_from_source 
-    configure_firewall      
+#    build_mn_from_source 
+#    configure_firewall      
     install_sentinel         
 }
 
